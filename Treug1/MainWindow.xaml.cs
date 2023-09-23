@@ -1,15 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace Treug1
@@ -111,7 +104,6 @@ namespace Treug1
          ***************/
         private void SetCircleO(Ellipse c, Point p, double d)
         {
-            
             c.SetValue(Canvas.LeftProperty, p.X - 0.5*d);
             c.SetValue(Canvas.WidthProperty, d);
             c.SetValue(Canvas.TopProperty, p.Y - 0.5*d);
@@ -130,21 +122,21 @@ namespace Treug1
             double[] heights = new double[3];
             double[] strokeThickness = new double[3];
 
-            lefts[0] = Double.Parse(EA.GetValue(Canvas.LeftProperty).ToString());
-            lefts[1] = Double.Parse(EB.GetValue(Canvas.LeftProperty).ToString());
-            lefts[2] = Double.Parse(EC.GetValue(Canvas.LeftProperty).ToString());
-            widths[0] = Double.Parse(EA.GetValue(Canvas.WidthProperty).ToString());
-            widths[1] = Double.Parse(EB.GetValue(Canvas.WidthProperty).ToString());
-            widths[2] = Double.Parse(EC.GetValue(Canvas.WidthProperty).ToString());
-            tops[0] = Double.Parse(EA.GetValue(Canvas.TopProperty).ToString());
-            tops[1] = Double.Parse(EB.GetValue(Canvas.TopProperty).ToString());
-            tops[2] = Double.Parse(EC.GetValue(Canvas.TopProperty).ToString());
-            heights[0] = Double.Parse(EA.GetValue(Canvas.HeightProperty).ToString());
-            heights[1] = Double.Parse(EB.GetValue(Canvas.HeightProperty).ToString());
-            heights[2] = Double.Parse(EC.GetValue(Canvas.HeightProperty).ToString());
-            strokeThickness[0] = Double.Parse(EA.StrokeThickness.ToString());
-            strokeThickness[1] = Double.Parse(EB.StrokeThickness.ToString());
-            strokeThickness[2] = Double.Parse(EC.StrokeThickness.ToString());
+            lefts[0] = double.Parse(EA.GetValue(Canvas.LeftProperty).ToString());
+            lefts[1] = double.Parse(EB.GetValue(Canvas.LeftProperty).ToString());
+            lefts[2] = double.Parse(EC.GetValue(Canvas.LeftProperty).ToString());
+            widths[0] = double.Parse(EA.GetValue(Canvas.WidthProperty).ToString());
+            widths[1] = double.Parse(EB.GetValue(Canvas.WidthProperty).ToString());
+            widths[2] = double.Parse(EC.GetValue(Canvas.WidthProperty).ToString());
+            tops[0] = double.Parse(EA.GetValue(Canvas.TopProperty).ToString());
+            tops[1] = double.Parse(EB.GetValue(Canvas.TopProperty).ToString());
+            tops[2] = double.Parse(EC.GetValue(Canvas.TopProperty).ToString());
+            heights[0] = double.Parse(EA.GetValue(Canvas.HeightProperty).ToString());
+            heights[1] = double.Parse(EB.GetValue(Canvas.HeightProperty).ToString());
+            heights[2] = double.Parse(EC.GetValue(Canvas.HeightProperty).ToString());
+            strokeThickness[0] = double.Parse(EA.StrokeThickness.ToString());
+            strokeThickness[1] = double.Parse(EB.StrokeThickness.ToString());
+            strokeThickness[2] = double.Parse(EC.StrokeThickness.ToString());
 
             Point A = new Point(lefts[0] + 0.5*widths[0] + 0*strokeThickness[0],
                                 tops[0] + 0.5*heights[0] + 0*strokeThickness[0]
@@ -167,14 +159,14 @@ namespace Treug1
 
         private Line FindCreateLine(Canvas c, string AName)
         {
-            Line l = (Line)null;
+            Line l = null;
             foreach (UIElement e in c.Children)
             {
-                if (e is Line && ((Line)e).Name == AName)
-                    l = (Line)e;
+                if (e is Line line && line.Name == AName)
+                    l = line;
             }
 
-            if (l == (Line)null)
+            if (l == null)
             {
                 l = new Line();
                 l.Name = AName;
@@ -188,25 +180,27 @@ namespace Treug1
             return l;
         }
 
-        private Ellipse FindCreateEllipse(Canvas c, string AName, Brush fill, Double d)
+        private Ellipse FindCreateEllipse(Canvas c, string AName, Brush fill, double d)
         {
-            Ellipse el = (Ellipse)null;
+            Ellipse el = null;
             foreach (UIElement e in c.Children)
             {
-                if (e is Ellipse && ((Ellipse)e).Name == AName)
-                    el = (Ellipse)e;
+                if (e is Ellipse ellipse && ellipse.Name == AName)
+                    el = ellipse;
             }
 
-            if (el == (Ellipse)null)
+            if (el == null)
             {
-                el = new Ellipse();
-                el.Name = AName;
-                el.Width = d;
-                el.Height = d;
-                el.Stroke = Brushes.Black;
-                el.StrokeThickness = 1;
-                el.Fill = fill;
-                el.IsHitTestVisible = false;
+                el = new Ellipse
+                {
+                    Name = AName,
+                    Width = d,
+                    Height = d,
+                    Stroke = Brushes.Black,
+                    StrokeThickness = 1,
+                    Fill = fill,
+                    IsHitTestVisible = false
+                };
 
                 c.Children.Add(el);
             }
@@ -214,7 +208,7 @@ namespace Treug1
             return el;
         }
 
-        private Rectangle FindCreateRect(Canvas c, string AName, Brush fill, Double d)
+        private Rectangle FindCreateRect(Canvas c, string AName, Brush fill, double d)
         {
             var el = (Rectangle)null;
             foreach (UIElement e in c.Children)
@@ -242,10 +236,10 @@ namespace Treug1
 
         private void LinkE(Ellipse A, Ellipse B, Line l)
         {
-            l.X1 = Double.Parse(A.GetValue(Canvas.LeftProperty).ToString()) + 0.5*Double.Parse(A.GetValue(Canvas.WidthProperty).ToString());
-            l.Y1 = Double.Parse(A.GetValue(Canvas.TopProperty).ToString()) + 0.5 * Double.Parse(A.GetValue(Canvas.HeightProperty).ToString());
-            l.X2 = Double.Parse(B.GetValue(Canvas.LeftProperty).ToString()) + 0.5 * Double.Parse(B.GetValue(Canvas.WidthProperty).ToString());
-            l.Y2 = Double.Parse(B.GetValue(Canvas.TopProperty).ToString()) + 0.5 * Double.Parse(B.GetValue(Canvas.HeightProperty).ToString());
+            l.X1 = double.Parse(A.GetValue(Canvas.LeftProperty).ToString()) + 0.5* double.Parse(A.GetValue(Canvas.WidthProperty).ToString());
+            l.Y1 = double.Parse(A.GetValue(Canvas.TopProperty).ToString()) + 0.5 * double.Parse(A.GetValue(Canvas.HeightProperty).ToString());
+            l.X2 = double.Parse(B.GetValue(Canvas.LeftProperty).ToString()) + 0.5 * double.Parse(B.GetValue(Canvas.WidthProperty).ToString());
+            l.Y2 = double.Parse(B.GetValue(Canvas.TopProperty).ToString()) + 0.5 * double.Parse(B.GetValue(Canvas.HeightProperty).ToString());
         }
     }
 }
