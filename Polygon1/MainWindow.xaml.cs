@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -18,44 +19,128 @@ namespace Polygon1
         private bool IsDragging;
         private Point mouseOffset;
         private List<Vertex> vertices = new List<Vertex> ();
-        const double ellipseDiameter = 13.0*3;
+        private Vertex divider;
+        private Vertex intersection1, intersection2;
+        const double ellipseDiameter = 13.0;
+        const double eps = 0.0001;
 
         public MainWindow()
         {
             InitializeComponent();
-            vertices.Add(new Vertex(0, 0));
-            vertices.Add(new Vertex(165, 5));
-            vertices.Add(new Vertex(189, 245));
-            vertices.Add(new Vertex(5, 165));
+            vertices.Add(new Vertex(0, 100));
+            vertices.Add(new Vertex(120, 130));
+            vertices.Add(new Vertex(140, 90));
+            vertices.Add(new Vertex(110, 31));
+            vertices.Add(new Vertex(40, 10));
+
+            divider = new Vertex(150, 0);
         }
 
-        public override void BeginInit()
+        public override void EndInit()
         {
-            base.BeginInit();
-            DrawPicture();
+            base.EndInit();
+            DrawVertices();
+            DrawPolygon();
+            CalcPolygonSquare();
+            DrawDivider();
+            DrawIntersectionPoints();
         }
 
-        private void DrawPicture()
+        /// <summary>
+        /// Рисуем все грани
+        /// </summary>
+        private void DrawPolygon()
         {
-            // Вершины
             for (int i = 0; i < vertices.Count; i++)
             {
-                DrawEllipse(this.Canv, i, vertices.ElementAt(i).x, vertices.ElementAt(i).y);
+                int next_idx = (i == (vertices.Count-1) ? 0 : i+1);
+                DrawLine(this.Canv, i, vertices.ElementAt(i), vertices.ElementAt(next_idx));
+            }
+        }
+
+        /// <summary>
+        /// Рисуем вертикальный разделитель
+        /// </summary>
+        private void DrawDivider()
+        {
+            if (divider != null)
+            {
+                var a = new Vertex(divider.x, 0);
+                var b = new Vertex(divider.x, 1200);
+                DrawLine(this.Canv, 1000, a, b, Brushes.Red);
+            }
+        }
+
+        /// <summary>
+        /// Рисуем точки пересечения разделителя и многоугольника
+        /// </summary>
+        private void DrawIntersectionPoints()
+        {
+            intersection1 = null;
+            intersection2 = null;
+
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                int next_idx = (i == vertices.Count-1) ? 0 : (i+1);
+                var a = vertices.ElementAt(i);
+                var b = vertices.ElementAt(next_idx);
+
+                if (a.x <= divider.x && b.x >= divider.x)
+                {
+                    intersection1 = FindIntersection(a, b, divider.x);
+                }
+
+                if (a.x >= divider.x && b.x <= divider.x)
+                {
+                    intersection2 = FindIntersection(b, a, divider.x);
+                }
             }
 
-            // Грани
-            for (int i = 1; i < vertices.Count; i++)
+            if (intersection1 != null)
             {
-                DrawLine(this.Canv, i, vertices.ElementAt(i-1), vertices.ElementAt(i));
+                DrawEllipse(this.Canv, 1000, intersection1.x, intersection1.y, Colors.Red);
             }
+
+            if (intersection2 != null)
+            {
+                DrawEllipse(this.Canv, 1001, intersection2.x, intersection2.y, Colors.RosyBrown);
+            }
+        }
+
+        /// <summary>
+        /// Поиск пересечения грани AB с линией x = x0.
+        /// Предположение: a.x < x0 < y.x
+        /// </summary>
+        private Vertex FindIntersection(Vertex a, Vertex b, int x0)
+        {
+            int y0;
+
+            if (a.x > x0 || b.x < x0)
+            {
+                throw new ArgumentException($"x0 should be between a.x, b.x. ax={a.x}, x0={x0}, bx={b.x}");
+            }
+
+            //if (a.x == b.x)
+            //{
+            //    y0 = a.y;
+            //}
+            //else
+            {
+                y0 = (int)(1.0*a.y + 1.0*(b.y - a.y) / (b.x - a.x) * (x0 - a.x));
+            }
+
+            return new Vertex(x0, y0);
         }
 
         private void sHeader_Click(object sender, RoutedEventArgs e)
         {
-            DrawPicture();
+            DrawPolygon();
         }
 
-        private void DrawLine(Canvas canv, int index, Vertex a, Vertex b)
+        /// <summary>
+        /// Создание и отображение линии
+        /// </summary>
+        private void DrawLine(Canvas canv, int index, Vertex a, Vertex b, Brush lineBrush = null)
         {
             string lineName = "Line" + index;
             Line element = null;
@@ -75,7 +160,7 @@ namespace Polygon1
                 element = new Line()
                 {
                     Name = lineName,
-                    Stroke = Brushes.Black,
+                    Stroke = lineBrush ?? Brushes.Black,
                     StrokeThickness = 3,
                     IsHitTestVisible = false
                 };
@@ -89,8 +174,12 @@ namespace Polygon1
             element.Y2 = b.y;
         }
 
-        private void DrawEllipse(Canvas canv, int index, int left, int top)
+        /// <summary>
+        /// Создание и отображение эллипса
+        /// </summary>
+        private void DrawEllipse(Canvas canv, int index, int left, int top, Color? ellipseColor = null)
         {
+            SolidColorBrush ellipseBrush = new SolidColorBrush(ellipseColor ?? Colors.Azure);
             string ellipseName = "Ellipse" + index;
 
             Ellipse element = null;
@@ -113,7 +202,7 @@ namespace Polygon1
                     Width = ellipseDiameter,
                     Height = ellipseDiameter,
                     StrokeThickness = 2,
-                    Fill = new SolidColorBrush(Colors.Azure),
+                    Fill = ellipseBrush,
                     Stroke = Brushes.Black,
                     Name = ellipseName
                 };
@@ -165,17 +254,75 @@ namespace Polygon1
                 double elp_x = p.X - mouseOffset.X;
                 double elp_y = p.Y - mouseOffset.Y;
 
+                string ellipseName = ellipse.Name;
+                int index = int.Parse(ellipseName.Substring("Ellipse".Length));
+                
+                if (index >= 1000)
+                    return;
+
                 ellipse.SetValue(Canvas.LeftProperty, elp_x);
                 ellipse.SetValue(Canvas.TopProperty, elp_y);
 
+                vertices.ElementAt(index).x = (int)(elp_x + ellipseDiameter / 2);
+                vertices.ElementAt(index).y = (int)(elp_y + ellipseDiameter / 2);
+
                 DrawPolygon();
-                sHeader.Content = string.Format($"{ellipse.Name}: {elp_x + ellipseDiameter/2}, {elp_y + ellipseDiameter/2}");
+                //sHeader.Content = string.Format($"{ellipse.Name}: {elp_x + ellipseDiameter/2}, {elp_y + ellipseDiameter/2}");
+
+                CalcPolygonSquare();
+                DrawDivider();
+                DrawIntersectionPoints();
             }
         }
 
-        private void DrawPolygon()
+        /// <summary>
+        /// Рисуем все вершины
+        /// </summary>
+        private void DrawVertices()
         {
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                DrawEllipse(this.Canv, i, vertices.ElementAt(i).x, vertices.ElementAt(i).y);
+            }
+        }
+
+        /// <summary>
+        /// Вычисление площади полигона
+        /// </summary>
+        /// <returns></returns>
+        private double CalcPolygonSquare()
+        {
+            double totalSquare = 0.0;
+            StringBuilder sLog = new StringBuilder();
+
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                var v = vertices.ElementAt(i);
+
+                int next_idx = (i == vertices.Count - 1) ? 0 : i+1;
+                var next_v = vertices.ElementAt(next_idx);
+                double currentSquare = TrapezoidSquare(v, next_v);
+                totalSquare += currentSquare;
+
+                sLog.Append($"{i}: {currentSquare}; ");
+            }
             
+            sLog.Append($" => total: {totalSquare}");
+            sHeader.Content = sLog.ToString();
+
+            return totalSquare;
+        }
+
+        /// <summary>
+        /// Площадь трапеции по вершинам "верхней" стороны
+        /// </summary>
+        /// <param name="v"></param>
+        /// <param name="next_v"></param>
+        /// <returns></returns>
+        private double TrapezoidSquare(Vertex v, Vertex next_v)
+        {
+            var s = 0.5*(v.y + next_v.y)*(next_v.x - v.x);
+            return s;
         }
     }
 }
